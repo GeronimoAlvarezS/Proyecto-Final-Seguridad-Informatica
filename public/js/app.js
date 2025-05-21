@@ -1,3 +1,5 @@
+const API_URL = "http://localhost:3000";
+
 const registerForm = document.getElementById("registerForm");
 const loginForm = document.getElementById("loginForm");
 const dashboard = document.getElementById("dashboard");
@@ -24,14 +26,19 @@ registerForm.addEventListener("submit", async (e) => {
     return;
   }
 
-  const res = await fetch("/api/users/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, document: documentId, password })
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/users/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, document: documentId, password })
+    });
 
-  const data = await res.json();
-  alert(data.message || "Registro completado");
+    const data = await res.json();
+    alert(data.message || "Registro completado");
+  } catch (error) {
+    alert("Error de conexión con el servidor (registro)");
+    console.error(error);
+  }
 });
 
 // Login
@@ -41,19 +48,24 @@ loginForm.addEventListener("submit", async (e) => {
   const documentId = document.getElementById("loginDocument").value;
   const password = document.getElementById("loginPassword").value;
 
-  const res = await fetch("/api/users/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ document: documentId, password })
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document: documentId, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-    showDashboard();
-  } else {
-    alert(data.message || "Credenciales inválidas");
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      showDashboard();
+    } else {
+      alert(data.message || "Credenciales inválidas");
+    }
+  } catch (error) {
+    alert("Error de conexión con el servidor (login)");
+    console.error(error);
   }
 });
 
@@ -74,47 +86,62 @@ addUserForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const name = document.getElementById("newUserName").value;
 
-  const res = await fetch("/api/users", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + localStorage.getItem("token")
-    },
-    body: JSON.stringify({ name })
-  });
+  try {
+    await fetch(`${API_URL}/api/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ name })
+    });
 
-  await fetchUsers();
+    await fetchUsers();
+  } catch (error) {
+    alert("Error al agregar usuario");
+    console.error(error);
+  }
 });
 
 // Obtener usuarios
 async function fetchUsers() {
-  const res = await fetch("/api/users", {
-    headers: {
-      "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/users`, {
+      headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      }
+    });
 
-  const users = await res.json();
-  userList.innerHTML = "";
-  users.forEach(user => {
-    const li = document.createElement("li");
-    li.textContent = user.name;
-    const btn = document.createElement("button");
-    btn.textContent = "Eliminar";
-    btn.onclick = () => deleteUser(user.id);
-    li.appendChild(btn);
-    userList.appendChild(li);
-  });
+    const users = await res.json();
+    userList.innerHTML = "";
+    users.forEach(user => {
+      const li = document.createElement("li");
+      li.textContent = user.Name; // ← corregido
+      const btn = document.createElement("button");
+      btn.textContent = "Eliminar";
+      btn.onclick = () => deleteUser(user.Id); // ← corregido
+      li.appendChild(btn);
+      userList.appendChild(li);
+    });
+  } catch (error) {
+    alert("Error al obtener usuarios");
+    console.error(error);
+  }
 }
 
 // Eliminar usuario
 async function deleteUser(id) {
-  await fetch(`/api/users/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-  });
+  try {
+    await fetch(`${API_URL}/api/users/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      }
+    });
 
-  await fetchUsers();
+    await fetchUsers();
+  } catch (error) {
+    alert("Error al eliminar usuario");
+    console.error(error);
+  }
 }

@@ -14,3 +14,10 @@ app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const { poolConnect } = require('./db');
+
+// Agrega esto para mostrar errores de conexión:
+poolConnect.catch(err => {
+  console.error('❌ Error al conectar con la base de datos SQL Server:', err);
+});

@@ -1,12 +1,24 @@
-const mysql = require('mysql2');
+const sql = require('mssql');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
+const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
-});
+  server: process.env.DB_SERVER,
+  database: process.env.DB_DATABASE,
+  port: parseInt(process.env.DB_PORT),
+  options: {
+    encrypt: true, // obligatorio para RDS
+    trustServerCertificate: true // evita errores SSL
+  }
+};
 
-module.exports = db;
+const pool = new sql.ConnectionPool(config);
+const poolConnect = pool.connect();
+
+module.exports = {
+  sql,
+  pool,
+  poolConnect
+};
